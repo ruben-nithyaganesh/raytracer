@@ -37,6 +37,7 @@ typedef struct {
     Vector3 pixel_delta;
     Vector3 half_pixel_delta;
 
+    int max_depth;
     int flags;
 } Camera;
 
@@ -75,6 +76,7 @@ Camera init_camera(Point position, double aspect_ratio, double image_height, dou
         -camera.focal_length}                       // move 'backwards' into z
     );
 
+    camera.max_depth = 10;
     camera.flags = flags;
     return camera;
 }
@@ -95,16 +97,24 @@ Ray sample_ray(Camera camera, Vector3 current_pixel_point, Ray ray) {
     return sampled_ray;
 }   
 
-Color ray_color(Camera *camera, Ray ray, World *world) {
+Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
+    if(depth <= 0) {
+        return (Color){0., 0., 0.,};
+    }
     Hit_Record hit_record;
     // iterate through objects in world looking for a hit
     for(int i = 0; i < world->count; i++) {
         Hittable h = world->hittables[i];
-        if(hit_object(h, ray, &hit_record, 0.001, 1000.0)) {
+        if(hit_object(h, ray, &hit_record, 0.001, 100000.0)) {
             
             Vector3 direction = random_on_hemisphere(hit_record.normal);
             Ray bounced = (Ray){hit_record.point, direction};
-            return color_scale(ray_color(camera, bounced, world), 0.5);
+
+            // double random_number = my_random_double();
+            // if(random_number <= 0.5) {
+            //     return color_scale(ray_color(camera, bounced, world, 1), 0.5);
+            // }
+            return color_scale(ray_color(camera, bounced, world, depth-1), 0.5);
 
             // Vector3 surface_normal = hit_record.normal;
             // Color col = {
@@ -173,11 +183,11 @@ void render(Camera camera, World *world, Pixel point_samples[], Pixel pixels[]) 
             if(camera.flags && CAMERA_ANTI_ALIASING) {
                 for(int i= 0; i < camera.samples_per_pixel; i++) {
                     Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
-                    col = color_add(col, ray_color(&camera, sampled_ray, world));
+                    col = color_add(col, ray_color(&camera, sampled_ray, world, camera.max_depth));
                 }
                 col = color_scale(col, camera.pixel_sample_scale);
             } else {
-                col = ray_color(&camera, ray, world);
+                col = ray_color(&camera, ray, world, camera.max_depth);
             }
             *p = pixel_from_color(col);
             p++;

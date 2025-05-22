@@ -92,18 +92,23 @@ Vector3 vector3_random_between(double min, double max) {
     return (Vector3) {my_random_double_between(min, max), my_random_double_between(min, max), my_random_double_between(min, max)};
 }
 
-Vector3 random_unit_vector() {
+Vector3 vector3_random_unit_vector() {
     while(1) {
         Point p = vector3_random_between(-1, 1);
         double length_squared = vector3_mag_squared(p);
-        if(1e-160 < length_squared && length_squared <= 1) {
-            return vector3_div(p, sqrt(length_squared));
+
+        // lesson has this condition, but don't think we care about the 1 here since
+        // we normalise the vector to unit length anyway ?
+        // if(1e-160 < length_squared && length_squared <= 1) { 
+        if(1e-160 < length_squared) {
+            Vector3 normalised = vector3_unit_vector(p);
+            return normalised;
         }
     }
 }
 
 Vector3 random_on_hemisphere(Vector3 normal) {
-    Vector3 on_unit_sphere = random_unit_vector();
+    Vector3 on_unit_sphere = vector3_random_unit_vector();
     if(vector3_dot(on_unit_sphere, normal) > 0.0) {
         return on_unit_sphere;
     } else {
