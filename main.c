@@ -19,15 +19,22 @@ int main(int argc, char **argv) {
     Camera camera = init_camera(
         (Point){0.0, 0.0, 0.0}, // position
         (16.0 / 9.0),           // aspect ratio
-        400.0,                  // image height
+        400,                  // image height
         1.0,                    // focal length
         2.0                     // viewport height
     );
 
-    Hittable_List hl = empty_hittable_list();
-    add_hittable(&hl, h_sphere((Point){0., 0., -2.0}, 1.0));
+    World world = init_world();
+    add_hittable(&world, h_sphere((Point){0., 0.,     -1.}, 0.5));
+    add_hittable(&world, h_sphere((Point){0., -100.5, -1.}, 100));
 
-    Pixel pixels[camera.image_width * camera.image_height];
-    render(camera, &hl, pixels);
+    int size = camera.image_width * camera.image_height;
+
+    Pixel *mem_block = (Pixel *)malloc(2 * size * sizeof(Pixel));
+    Pixel *pixels = mem_block;
+    Pixel *point_samples = mem_block + size;
+
+    render(camera, &world, point_samples, pixels);
+
     save_ppm("image.ppm", pixels, camera.image_width, camera.image_height);
 }

@@ -60,6 +60,7 @@ Vector3 vector3_invert(Vector3 vec3) {
     a.z = -vec3.z;
     return a;
 }
+
 double vector3_mag_squared(Vector3 vec) {
     double sum = 0;
     sum += vec.x*vec.x;

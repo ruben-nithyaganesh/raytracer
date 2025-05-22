@@ -9,6 +9,10 @@ typedef struct Pixel {
     unsigned char r, g, b;
 } Pixel;
 
+typedef struct Color {
+    float r, g, b;
+} Color;
+
 // void save_bitmap(Pixel data[], const char* file_name, int width, int height, int dpi) {
 
 //     struct bitmap_file_header {
@@ -120,6 +124,22 @@ Pixel pixel_from_floats(double r, double g, double b) {
     return p;
 }
 
+Pixel pixel_add(Pixel pixel, Pixel to_add) {
+    Pixel p;
+    p.r = pixel.r + to_add.r;
+    p.g = pixel.g + to_add.g;
+    p.b = pixel.b + to_add.b;
+    return p;
+}
+
+Pixel pixel_scale(Pixel pixel, double scale) {
+    Pixel p;
+    p.r = pixel.r * scale;
+    p.g = pixel.g * scale;
+    p.b = pixel.b * scale;
+    return p;
+}
+
 Pixel lerp_pixel(Pixel p1, Pixel p2, double a) {
     if(a <= 0) return p1;
     if(a >= 1.0) return p2;
@@ -128,5 +148,35 @@ Pixel lerp_pixel(Pixel p1, Pixel p2, double a) {
     p_lerped.g = (1.0 - a) * p1.g + a * p2.g;
     p_lerped.b = (1.0 - a) * p1.b + a * p2.b;
     return p_lerped;
+}
+
+Color lerp_color(Color p1, Color p2, double a) {
+    if(a <= 0) return p1;
+    if(a >= 1.0) return p2;
+    Color p_lerped;
+    p_lerped.r = (1.0 - a) * p1.r + a * p2.r;
+    p_lerped.g = (1.0 - a) * p1.g + a * p2.g;
+    p_lerped.b = (1.0 - a) * p1.b + a * p2.b;
+    return p_lerped;
+}
+
+Color color_add(Color pixel, Color to_add) {
+    Color p;
+    p.r = pixel.r + to_add.r;
+    p.g = pixel.g + to_add.g;
+    p.b = pixel.b + to_add.b;
+    return p;
+}
+
+Color color_scale(Color color, double scale) {
+    Color scaled;
+    scaled.r = color.r * scale;
+    scaled.g = color.g * scale;
+    scaled.b = color.b * scale;
+    return scaled;
+}
+
+Pixel pixel_from_color(Color c) {
+    return pixel_from_floats(c.r, c.g, c.b);
 }
 #endif 

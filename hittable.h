@@ -3,7 +3,7 @@
 
 #include "vector.h"
 
-#define MAX_HITTABLES 10
+#define MAX_HITTABLES 5
 
 typedef enum {
     SPHERE,
@@ -25,7 +25,7 @@ typedef struct {
 typedef struct {
     Hittable hittables[MAX_HITTABLES];
     int count;
-} Hittable_List;
+} World;
 
 typedef struct {
     Point point;
@@ -45,20 +45,20 @@ Hittable h_sphere(Point p, double radius) {
     return h;
 }
 
-Hittable_List empty_hittable_list() {
-    Hittable_List hl;
-    memset(hl.hittables, 0, MAX_HITTABLES * sizeof(hl.hittables[0]));
-    hl.count = 0;
-    return hl;
+World init_world() {
+    World world;
+    memset(world.hittables, 0, MAX_HITTABLES * sizeof(world.hittables[0]));
+    world.count = 0;
+    return world;
 }
 
-void add_hittable(Hittable_List *hl, Hittable h) {
-    if(hl->count >= MAX_HITTABLES-1){
-        printf("Hittable count exceeded.");
+void add_hittable(World *world, Hittable h) {
+    if(world->count >= MAX_HITTABLES){
+        printf("Max hittables reached.\n");
         return;
     }
 
-    hl->hittables[hl->count++] = h;
+    world->hittables[world->count++] = h;
 }
 
 // This assumes we have a normalised normal vector already calculated in the given 
