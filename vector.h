@@ -1,6 +1,7 @@
 #ifndef VECTOR
 #define VECTOR
 #include "math.h"
+#include "random_util.h"
 
 typedef struct {
     double x, y, z;
@@ -81,6 +82,33 @@ Vector3 vector3_unit_vector(Vector3 vec) {
 
 void vector3_print(Vector3 vec) {
     printf("vec3(%.5f, %.5f, %.5f)\n", vec.x, vec.y, vec.z);
+}
+
+Vector3 vector3_random() {
+    return (Vector3) {my_random_double(), my_random_double(), my_random_double()};
+}
+
+Vector3 vector3_random_between(double min, double max) {
+    return (Vector3) {my_random_double_between(min, max), my_random_double_between(min, max), my_random_double_between(min, max)};
+}
+
+Vector3 random_unit_vector() {
+    while(1) {
+        Point p = vector3_random_between(-1, 1);
+        double length_squared = vector3_mag_squared(p);
+        if(1e-160 < length_squared && length_squared <= 1) {
+            return vector3_div(p, sqrt(length_squared));
+        }
+    }
+}
+
+Vector3 random_on_hemisphere(Vector3 normal) {
+    Vector3 on_unit_sphere = random_unit_vector();
+    if(vector3_dot(on_unit_sphere, normal) > 0.0) {
+        return on_unit_sphere;
+    } else {
+        return vector3_invert(on_unit_sphere);
+    }
 }
 
 typedef struct {

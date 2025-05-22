@@ -101,13 +101,18 @@ Color ray_color(Camera *camera, Ray ray, World *world) {
     for(int i = 0; i < world->count; i++) {
         Hittable h = world->hittables[i];
         if(hit_object(h, ray, &hit_record, 0.001, 1000.0)) {
-            Vector3 surface_normal = hit_record.normal;
-            Color col = {
-                0.5*(surface_normal.x+1),
-                0.5*(surface_normal.y+1),
-                0.5*(surface_normal.z+1)
-            };
-            return col;
+            
+            Vector3 direction = random_on_hemisphere(hit_record.normal);
+            Ray bounced = (Ray){hit_record.point, direction};
+            return color_scale(ray_color(camera, bounced, world), 0.5);
+
+            // Vector3 surface_normal = hit_record.normal;
+            // Color col = {
+            //     0.5*(surface_normal.x+1),
+            //     0.5*(surface_normal.y+1),
+            //     0.5*(surface_normal.z+1)
+            // };
+            // return col;
         }
     }
 
