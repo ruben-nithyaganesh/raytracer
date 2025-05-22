@@ -15,13 +15,22 @@ Pixel fragment(int x, int y, int width, int height) {
 }
 
 int main(int argc, char **argv) {
+    
+    // options
+    int anti_aliasing = 0;
+    if(argc > 1){
+        if(strcmp("--aa", argv[1]) == 0) {
+            anti_aliasing = CAMERA_ANTI_ALIASING;
+        }
+    }
 
     Camera camera = init_camera(
         (Point){0.0, 0.0, 0.0}, // position
         (16.0 / 9.0),           // aspect ratio
-        400,                  // image height
+        400,                    // image height
         1.0,                    // focal length
-        2.0                     // viewport height
+        2.0,                    // viewport height
+        0 | anti_aliasing
     );
 
     World world = init_world();

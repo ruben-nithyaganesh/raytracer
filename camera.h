@@ -5,6 +5,8 @@
 #include "bitmap.h"
 #include "random_util.h"
 
+#define CAMERA_ANTI_ALIASING 0x00000001
+
 typedef struct {
     Point pos;
 
@@ -35,9 +37,10 @@ typedef struct {
     Vector3 pixel_delta;
     Vector3 half_pixel_delta;
 
+    int flags;
 } Camera;
 
-Camera init_camera(Point position, double aspect_ratio, double image_height, double focal_length, double viewport_height) {
+Camera init_camera(Point position, double aspect_ratio, double image_height, double focal_length, double viewport_height, int flags) {
     Camera camera;
     camera.aspect_ratio = aspect_ratio;
     camera.image_height = image_height;
@@ -72,6 +75,7 @@ Camera init_camera(Point position, double aspect_ratio, double image_height, dou
         -camera.focal_length}                       // move 'backwards' into z
     );
 
+    camera.flags = flags;
     return camera;
 }
 
@@ -81,9 +85,11 @@ Ray sample_ray(Camera camera, Vector3 current_pixel_point, Ray ray) {
     // to generate an anti aliased sample we sample around this point
     Point offset = (Vector3){current_pixel_point.x, current_pixel_point.y, current_pixel_point.z};
 
+    // perturb the current point by a random small amount
     Vector3 sample_square = (Vector3){my_random_double() - 0.5, my_random_double() - 0.5, 0};
     offset = vector3_add(offset, (Vector3){sample_square.x * camera.pixel_delta.x, sample_square.y * camera.pixel_delta.y, 0});
 
+    // sample this offset ray
     sampled_ray.origin = camera.pos;
     sampled_ray.direction = vector3_sub(offset, ray.origin);
     return sampled_ray;
@@ -154,14 +160,20 @@ void render(Camera camera, World *world, Pixel point_samples[], Pixel pixels[]) 
     Pixel *p = pixels;
     for (int y = 0; y < camera.image_height; y++) {
         for (int x = 0; x < camera.image_width; x++) {
+
             Vector3 ray_direction = vector3_sub(current_pixel_point, camera.pos);   
-            Ray ray = (Ray){camera.pos, ray_direction};
+            Ray ray   = (Ray){camera.pos, ray_direction};
             Color col = (Color){0., 0., 0.};
-            for(int i= 0; i < camera.samples_per_pixel; i++) {
-                Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
-                col = color_add(col, ray_color(&camera, sampled_ray, world));
+            
+            if(camera.flags && CAMERA_ANTI_ALIASING) {
+                for(int i= 0; i < camera.samples_per_pixel; i++) {
+                    Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
+                    col = color_add(col, ray_color(&camera, sampled_ray, world));
+                }
+                col = color_scale(col, camera.pixel_sample_scale);
+            } else {
+                col = ray_color(&camera, ray, world);
             }
-            col = color_scale(col, camera.pixel_sample_scale);
             *p = pixel_from_color(col);
             p++;
             current_pixel_point = vector3_add(current_pixel_point, camera.pixel_delta_u);
