@@ -176,7 +176,23 @@ Color color_scale(Color color, double scale) {
     return scaled;
 }
 
+double inverse_gamma(double linear_component) {
+    if(linear_component > 0) {
+        return sqrt(linear_component);
+    }
+    return 0;
+}
+
+Color linear_to_gamma(Color c) {
+    Color gamma;
+    gamma.r = inverse_gamma(c.r);
+    gamma.g = inverse_gamma(c.g);
+    gamma.b = inverse_gamma(c.b);
+    return gamma;
+}
+
 Pixel pixel_from_color(Color c) {
+    c = linear_to_gamma(c);
     return pixel_from_floats(c.r, c.g, c.b);
 }
 #endif 
