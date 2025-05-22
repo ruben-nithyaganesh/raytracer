@@ -107,7 +107,7 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
         Hittable h = world->hittables[i];
         if(hit_object(h, ray, &hit_record, 0.001, 100000.0)) {
             
-            Vector3 direction = random_on_hemisphere(hit_record.normal);
+            Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
             Ray bounced = (Ray){hit_record.point, direction};
 
             // double random_number = my_random_double();
