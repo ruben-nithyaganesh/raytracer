@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     Camera camera = init_camera(
         (Point){0.0, 0.0, 0.0}, // position
         (16.0 / 9.0),           // aspect ratio
-        400,                    // image height
+        800,                    // image height
         1.0,                    // focal length
         2.0,                    // viewport height
         100,                    // samples per pixel

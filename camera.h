@@ -75,8 +75,12 @@ Ray sample_ray(Camera camera, Vector3 current_pixel_point, Ray ray) {
     Ray sampled_ray;
     Point offset = (Vector3){current_pixel_point.x, current_pixel_point.y, current_pixel_point.z};
 
-    Vector3 sample_square = (Vector3){my_random_double() - 0.5, my_random_double() - 0.5, 0};
-    offset = vector3_add(offset, (Vector3){sample_square.x * camera.pixel_delta.x, sample_square.y * camera.pixel_delta.y, 0});
+    Vector3 sample_square = (Vector3){
+        (my_random_double() - 0.5) * camera.pixel_delta.x,
+        (my_random_double() - 0.5) * camera.pixel_delta.y,
+        0
+    };
+    offset = vector3_add(offset, sample_square);
 
     sampled_ray.origin = camera.pos;
     sampled_ray.direction = vector3_sub(offset, ray.origin);
@@ -97,6 +101,9 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
             case DIFFUSE:
             {
                 Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
+                if(vector3_near_zero(direction)) {
+                    direction = hit_record.normal;
+                }
                 Ray bounced = (Ray){hit_record.point, direction};
                 return color_scale(ray_color(camera, bounced, world, depth-1), hit_material.diffuse.absorption);
             }break;
