@@ -53,10 +53,10 @@ Camera init_camera(Point position, double aspect_ratio, double image_height, dou
     camera.viewport_u       = (Vector3)  {camera.viewport_width, 0.0,                     0.0};
     camera.viewport_v       = (Vector3)  {0.0,                   -camera.viewport_height, 0.0};
 
-    camera.pixel_delta_u    = vector3_div(camera.viewport_u,     camera.image_width          );
-    camera.pixel_delta_v    = vector3_div(camera.viewport_v,     camera.image_height         );
-    camera.pixel_delta      = vector3_add(camera.pixel_delta_u,  camera.pixel_delta_v        );
-    camera.half_pixel_delta = vector3_mul(camera.pixel_delta,    0.5                         );
+    camera.pixel_delta_u    = vector3_div(camera.viewport_u,     camera.image_width  );
+    camera.pixel_delta_v    = vector3_div(camera.viewport_v,     camera.image_height );
+    camera.pixel_delta      = vector3_add(camera.pixel_delta_u,  camera.pixel_delta_v);
+    camera.half_pixel_delta = vector3_mul(camera.pixel_delta,    0.5                 );
 
     camera.viewport_upper_left = vector3_add(
         camera.pos,
