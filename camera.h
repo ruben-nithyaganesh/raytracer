@@ -80,18 +80,22 @@ Camera init_camera(
 }
 
 Ray sample_ray(Camera camera, Point current_pixel, Ray ray) {
+    if(camera.flags && CAMERA_ANTI_ALIASING) {
+        Vector3 sample_square = (Vector3){
+            (my_random_double() - 0.5) * camera.pixel_delta.x,
+            (my_random_double() - 0.5) * camera.pixel_delta.y,
+            0
+        };
+        Point perturbed = vector3_add(current_pixel, sample_square);
 
-    Vector3 sample_square = (Vector3){
-        (my_random_double() - 0.5) * camera.pixel_delta.x,
-        (my_random_double() - 0.5) * camera.pixel_delta.y,
-        0
-    };
-    Point perturbed = vector3_add(current_pixel, sample_square);
-
-    Ray sampled_ray;
-    sampled_ray.origin = camera.pos;
-    sampled_ray.direction = vector3_sub(perturbed, ray.origin);
-    return sampled_ray;
+        Ray sampled_ray;
+        sampled_ray.origin = camera.pos;
+        sampled_ray.direction = vector3_sub(perturbed, ray.origin);
+        return sampled_ray;
+    }
+    else {
+        return ray;
+    }
 }   
 
 Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
@@ -167,15 +171,11 @@ void render(Camera camera, World *world, Pixel pixels[]) {
             Ray ray   = (Ray){camera.pos, ray_direction};
             Color col = (Color){0., 0., 0.};
             
-            if(camera.flags && CAMERA_ANTI_ALIASING) {
-                for(int i= 0; i < camera.samples_per_pixel; i++) {
-                    Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
-                    col = color_add(col, ray_color(&camera, sampled_ray, world, camera.max_depth));
-                }
-                col = color_scale(col, camera.pixel_sample_scale);
-            } else {
-                col = ray_color(&camera, ray, world, camera.max_depth);
+            for(int i= 0; i < camera.samples_per_pixel; i++) {
+                Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
+                col = color_add(col, ray_color(&camera, sampled_ray, world, camera.max_depth));
             }
+            col = color_scale(col, camera.pixel_sample_scale);
             *p = pixel_from_color(col);
             p++;
             current_pixel_point = vector3_add(current_pixel_point, camera.pixel_delta_u);
