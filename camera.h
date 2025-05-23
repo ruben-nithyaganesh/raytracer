@@ -41,7 +41,7 @@ typedef struct {
     int flags;
 } Camera;
 
-Camera init_camera(Point position, double aspect_ratio, double image_height, double focal_length, double viewport_height, int flags) {
+Camera init_camera(Point position, double aspect_ratio, double image_height, double focal_length, double viewport_height, int samples_per_pixel, int flags) {
     Camera camera;
     camera.aspect_ratio = aspect_ratio;
     camera.image_height = image_height;
@@ -53,7 +53,7 @@ Camera init_camera(Point position, double aspect_ratio, double image_height, dou
     camera.viewport_width = camera.viewport_height * ((double)camera.image_width / camera.image_height);
     camera.pos = position;
 
-    camera.samples_per_pixel = 100;
+    camera.samples_per_pixel = samples_per_pixel;
     camera.pixel_sample_scale = 1.0 / camera.samples_per_pixel;
 
     camera.bg_linear_gradient.start = (Color){.5, .7, 1.};
@@ -103,26 +103,30 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
     }
     Hit_Record hit_record;
     // iterate through objects in world looking for a hit
-    for(int i = 0; i < world->count; i++) {
-        Hittable h = world->hittables[i];
-        if(hit_object(h, ray, &hit_record, 0.001, 100000.0)) {
-            
-            Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
-            Ray bounced = (Ray){hit_record.point, direction};
+    int hit_index = find_hit(world, ray, &hit_record);
+    if(hit_index != -1) {
+        Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
+        Ray bounced = (Ray){hit_record.point, direction};
+        Hittable hit = world->hittables[hit_index];
+        Material hit_material = hit.material;
 
-            // double random_number = my_random_double();
-            // if(random_number <= 0.5) {
-            //     return color_scale(ray_color(camera, bounced, world, 1), 0.5);
-            // }
-            return color_scale(ray_color(camera, bounced, world, depth-1), 0.5);
-
-            // Vector3 surface_normal = hit_record.normal;
-            // Color col = {
-            //     0.5*(surface_normal.x+1),
-            //     0.5*(surface_normal.y+1),
-            //     0.5*(surface_normal.z+1)
-            // };
-            // return col;
+        switch(hit_material.type) {
+            case DIFFUSE:
+            {
+                return color_scale(ray_color(camera, bounced, world, depth-1), hit_material.diffuse.absorption);
+            }break;
+            case COLOR_NORMAL:
+            {
+                Vector3 surface_normal = hit_record.normal;
+                Color col = {
+                    0.5*(surface_normal.x+1),
+                    0.5*(surface_normal.y+1),
+                    0.5*(surface_normal.z+1)
+                };
+                return col;
+            }
+            default:
+                return (Color){0., 0., 0.,};
         }
     }
 

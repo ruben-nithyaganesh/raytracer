@@ -6,6 +6,21 @@
 #define MAX_HITTABLES 5
 
 typedef enum {
+    DIFFUSE,
+    COLOR_NORMAL,
+    n_material_types
+} Material_Type;
+
+typedef struct {
+    Material_Type type;
+    union {
+        struct {
+            float absorption;
+        } diffuse;
+    };
+} Material;
+
+typedef enum {
     SPHERE,
     n_hittable_types
 } Hittable_Type;
@@ -16,6 +31,7 @@ typedef struct {
 
 typedef struct {
     Hittable_Type type;
+    Material material;
     Point pos;
     union {
         Sphere sphere;
@@ -34,7 +50,7 @@ typedef struct {
     int front_face;
 } Hit_Record;
 
-Hittable h_sphere(Point p, double radius) {
+Hittable h_sphere(Point p, Material material, double radius) {
     Sphere s;
     s.radius = radius;
 
@@ -42,6 +58,8 @@ Hittable h_sphere(Point p, double radius) {
     h.type = SPHERE;
     h.pos = p;
     h.sphere = s;
+
+    h.material = material;
     return h;
 }
 
@@ -127,4 +145,22 @@ int hit_object(Hittable hittable, Ray ray, Hit_Record *hit_record, double t_min,
     }
 }
 
+int find_hit(World *world, Ray ray, Hit_Record *hit_record) {
+    // iterate through objects in world looking for a hit
+    Hit_Record closest;
+    closest.t = 100000.0;
+    int hit_index = -1;
+    for(int i = 0; i < world->count; i++) {
+        Hittable h = world->hittables[i];
+        Hit_Record test_hit;
+        if(hit_object(h, ray, &test_hit, 0.001, 100000.0)) {
+            if(closest.t > test_hit.t) {
+                hit_index = i;
+                closest = test_hit;
+            }
+        }
+    }
+    *hit_record = closest;
+    return hit_index;
+}
 #endif
