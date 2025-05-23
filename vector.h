@@ -107,13 +107,18 @@ Vector3 vector3_random_unit_vector() {
     }
 }
 
-Vector3 random_on_hemisphere(Vector3 normal) {
+Vector3 vector3_random_on_hemisphere(Vector3 normal) {
     Vector3 on_unit_sphere = vector3_random_unit_vector();
     if(vector3_dot(on_unit_sphere, normal) > 0.0) {
         return on_unit_sphere;
     } else {
         return vector3_invert(on_unit_sphere);
     }
+}
+
+int vector3_near_zero(Vector3 v) {
+    double s = 1e-8;
+    return (v.x <= s && v.y <= s && v.z <= s);
 }
 
 typedef struct {
