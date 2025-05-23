@@ -3,20 +3,19 @@
 
 #include "vector.h"
 
-#define MAX_HITTABLES 5
+#define MAX_HITTABLES 20
 
 typedef enum {
     DIFFUSE,
     COLOR_NORMAL,
+    METAL,
     n_material_types
 } Material_Type;
 
 typedef struct {
     Material_Type type;
     union {
-        struct {
-            float absorption;
-        } diffuse;
+        float albedo;
     };
 } Material;
 

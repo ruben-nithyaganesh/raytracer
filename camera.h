@@ -32,7 +32,15 @@ typedef struct {
     int             flags;
 } Camera;
 
-Camera init_camera(Point position, double aspect_ratio, double image_height, double focal_length, double viewport_height, int samples_per_pixel, int flags) {
+Camera init_camera(
+    Point position,
+    double aspect_ratio,
+    double image_height,
+    double focal_length,
+    double viewport_height,
+    int samples_per_pixel,
+    int flags
+) {
     Camera camera;
     camera.pos              = position;
     camera.aspect_ratio     = aspect_ratio;
@@ -71,19 +79,18 @@ Camera init_camera(Point position, double aspect_ratio, double image_height, dou
     return camera;
 }
 
-Ray sample_ray(Camera camera, Vector3 current_pixel_point, Ray ray) {
-    Ray sampled_ray;
-    Point offset = (Vector3){current_pixel_point.x, current_pixel_point.y, current_pixel_point.z};
+Ray sample_ray(Camera camera, Point current_pixel, Ray ray) {
 
     Vector3 sample_square = (Vector3){
         (my_random_double() - 0.5) * camera.pixel_delta.x,
         (my_random_double() - 0.5) * camera.pixel_delta.y,
         0
     };
-    offset = vector3_add(offset, sample_square);
+    Point perturbed = vector3_add(current_pixel, sample_square);
 
+    Ray sampled_ray;
     sampled_ray.origin = camera.pos;
-    sampled_ray.direction = vector3_sub(offset, ray.origin);
+    sampled_ray.direction = vector3_sub(perturbed, ray.origin);
     return sampled_ray;
 }   
 
@@ -96,27 +103,32 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
     int hit_index = find_hit(world, ray, &hit_record);
     if(hit_index != -1) {
         Hittable hit = world->hittables[hit_index];
-        Material hit_material = hit.material;
-        switch(hit_material.type) {
+        switch(hit.material.type) {
             case DIFFUSE:
             {
                 Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
-                if(vector3_near_zero(direction)) {
+                if(vector3_near_zero(direction))
                     direction = hit_record.normal;
-                }
                 Ray bounced = (Ray){hit_record.point, direction};
-                return color_scale(ray_color(camera, bounced, world, depth-1), hit_material.diffuse.absorption);
+                Color col   = ray_color(camera, bounced, world, depth-1);
+                return color_scale(col, hit.material.albedo);
+            }break;
+            case METAL:
+            {
+                Vector3 reflected = vector3_reflect(ray.direction, hit_record.normal);
+                Ray bounced = (Ray){hit_record.point, reflected};
+                Color col   = ray_color(camera, bounced, world, depth-1);
+                return color_scale(col, hit.material.albedo);
             }break;
             case COLOR_NORMAL:
             {
                 Vector3 surface_normal = hit_record.normal;
-                Color col = {
+                return (Color) {
                     0.5*(surface_normal.x+1),
                     0.5*(surface_normal.y+1),
                     0.5*(surface_normal.z+1)
                 };
-                return col;
-            }
+            }break;
             default:
                 return (Color){0., 0., 0.,};
         }
@@ -142,13 +154,10 @@ Pixel pixel_at(Pixel pixels[], int x, int y, int image_width, int image_height) 
     }
 }
 
-void render(Camera camera, World *world, Pixel point_samples[], Pixel pixels[]) {
+void render(Camera camera, World *world, Pixel pixels[]) {
 
     Point pixel00 = vector3_add(camera.viewport_upper_left, camera.half_pixel_delta);
     Point current_pixel_point = pixel00;
-
-    vector3_print(camera.pixel_delta_u);
-    vector3_print(camera.pixel_delta_v);
 
     Pixel *p = pixels;
     for (int y = 0; y < camera.image_height; y++) {
@@ -171,8 +180,9 @@ void render(Camera camera, World *world, Pixel point_samples[], Pixel pixels[]) 
             p++;
             current_pixel_point = vector3_add(current_pixel_point, camera.pixel_delta_u);
         }
-        current_pixel_point.x = pixel00.x;
-        current_pixel_point = vector3_add(current_pixel_point, camera.pixel_delta_v);
+        current_pixel_point.x   = pixel00.x;
+        current_pixel_point.y   += camera.pixel_delta.y;
+        printf("Row %d/%d\n", y+1, camera.image_height);
     }
 }
 #endif

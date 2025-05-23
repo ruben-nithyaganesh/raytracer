@@ -121,6 +121,11 @@ int vector3_near_zero(Vector3 v) {
     return (v.x <= s && v.y <= s && v.z <= s);
 }
 
+Vector3 vector3_reflect(Vector3 v, Vector3 normal) {
+    double proj = vector3_dot(v, normal);
+    return vector3_sub(v, vector3_mul(normal, 2*proj));
+}
+
 typedef struct {
     Point origin;
     Vector3 direction;
