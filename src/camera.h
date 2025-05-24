@@ -21,13 +21,13 @@ typedef struct {
         Color start;
         Color end;
     }               bg_linear_gradient;
-    Vector3         viewport_u;
-    Vector3         viewport_v;
-    Vector3         viewport_upper_left;
-    Vector3         pixel_delta_u;
-    Vector3         pixel_delta_v;
-    Vector3         pixel_delta;
-    Vector3         half_pixel_delta;
+    Vec3         viewport_u;
+    Vec3         viewport_v;
+    Vec3         viewport_upper_left;
+    Vec3         pixel_delta_u;
+    Vec3         pixel_delta_v;
+    Vec3         pixel_delta;
+    Vec3         half_pixel_delta;
     int             max_depth;
     int             flags;
 } Camera;
@@ -58,17 +58,17 @@ Camera init_camera(
     camera.bg_linear_gradient.start = (Color){0.5, 0.7, 1.0};
     camera.bg_linear_gradient.end   = (Color){1.0, 1.0, 1.0};
 
-    camera.viewport_u       = (Vector3)  {camera.viewport_width, 0.0,                     0.0};
-    camera.viewport_v       = (Vector3)  {0.0,                   -camera.viewport_height, 0.0};
+    camera.viewport_u       = (Vec3)  {camera.viewport_width, 0.0,                     0.0};
+    camera.viewport_v       = (Vec3)  {0.0,                   -camera.viewport_height, 0.0};
 
-    camera.pixel_delta_u    = vector3_div(camera.viewport_u,     camera.image_width  );
-    camera.pixel_delta_v    = vector3_div(camera.viewport_v,     camera.image_height );
-    camera.pixel_delta      = vector3_add(camera.pixel_delta_u,  camera.pixel_delta_v);
-    camera.half_pixel_delta = vector3_mul(camera.pixel_delta,    0.5                 );
+    camera.pixel_delta_u    = vec3_div(camera.viewport_u,     camera.image_width  );
+    camera.pixel_delta_v    = vec3_div(camera.viewport_v,     camera.image_height );
+    camera.pixel_delta      = vec3_add(camera.pixel_delta_u,  camera.pixel_delta_v);
+    camera.half_pixel_delta = vec3_mul(camera.pixel_delta,    0.5                 );
 
-    camera.viewport_upper_left = vector3_add(
+    camera.viewport_upper_left = vec3_add(
         camera.pos,
-        (Vector3)
+        (Vec3)
         {-(camera.viewport_width / 2.0),
         (camera.viewport_height / 2.0),
         -camera.focal_length}
@@ -81,16 +81,16 @@ Camera init_camera(
 
 Ray sample_ray(Camera camera, Point current_pixel, Ray ray) {
     if(camera.flags && CAMERA_ANTI_ALIASING) {
-        Vector3 sample_square = (Vector3){
+        Vec3 sample_square = (Vec3){
             (my_random_double() - 0.5) * camera.pixel_delta.x,
             (my_random_double() - 0.5) * camera.pixel_delta.y,
             0
         };
-        Point perturbed = vector3_add(current_pixel, sample_square);
+        Point perturbed = vec3_add(current_pixel, sample_square);
 
         Ray sampled_ray;
         sampled_ray.origin = camera.pos;
-        sampled_ray.direction = vector3_sub(perturbed, ray.origin);
+        sampled_ray.direction = vec3_sub(perturbed, ray.origin);
         return sampled_ray;
     }
     else {
@@ -110,8 +110,8 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
         switch(hit.material.type) {
             case DIFFUSE:
             {
-                Vector3 direction = vector3_add(hit_record.normal, vector3_random_unit_vector());
-                if(vector3_near_zero(direction))
+                Vec3 direction = vec3_add(hit_record.normal, vec3_random_unit_vector());
+                if(vec3_near_zero(direction))
                     direction = hit_record.normal;
                 Ray bounced = (Ray){hit_record.point, direction};
                 Color col   = ray_color(camera, bounced, world, depth-1);
@@ -119,14 +119,14 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
             }break;
             case METAL:
             {
-                Vector3 reflected = vector3_reflect(ray.direction, hit_record.normal);
+                Vec3 reflected = vec3_reflect(ray.direction, hit_record.normal);
                 Ray bounced = (Ray){hit_record.point, reflected};
                 Color col   = ray_color(camera, bounced, world, depth-1);
                 return color_scale(col, hit.material.albedo);
             }break;
             case COLOR_NORMAL:
             {
-                Vector3 surface_normal = hit_record.normal;
+                Vec3 surface_normal = hit_record.normal;
                 return (Color) {
                     0.5*(surface_normal.x+1),
                     0.5*(surface_normal.y+1),
@@ -139,7 +139,7 @@ Color ray_color(Camera *camera, Ray ray, World *world, int depth) {
     }
 
     // render default background if no objects hit
-    Vector3 unit_dir = vector3_unit_vector(ray.direction);
+    Vec3 unit_dir = vec3_unit_vector(ray.direction);
     double a = 0.5 * (unit_dir.y + 1.0);
     Color lerped = lerp_color(
         camera->bg_linear_gradient.end,
@@ -160,25 +160,25 @@ Pixel pixel_at(Pixel pixels[], int x, int y, int image_width, int image_height) 
 
 void render(Camera camera, World *world, Pixel pixels[]) {
 
-    Point pixel00 = vector3_add(camera.viewport_upper_left, camera.half_pixel_delta);
+    Point pixel00 = vec3_add(camera.viewport_upper_left, camera.half_pixel_delta);
     Point current_pixel_point = pixel00;
 
     Pixel *p = pixels;
     for (int y = 0; y < camera.image_height; y++) {
         for (int x = 0; x < camera.image_width; x++) {
 
-            Vector3 ray_direction = vector3_sub(current_pixel_point, camera.pos);   
+            Vec3 ray_direction = vec3_sub(current_pixel_point, camera.pos);   
             Ray ray   = (Ray){camera.pos, ray_direction};
             Color col = (Color){0., 0., 0.};
             
-            for(int i= 0; i < camera.samples_per_pixel; i++) {
+            for(int i = 0; i < camera.samples_per_pixel; i++) {
                 Ray sampled_ray = sample_ray(camera, current_pixel_point, ray);
                 col = color_add(col, ray_color(&camera, sampled_ray, world, camera.max_depth));
             }
             col = color_scale(col, camera.pixel_sample_scale);
             *p = pixel_from_color(col);
             p++;
-            current_pixel_point = vector3_add(current_pixel_point, camera.pixel_delta_u);
+            current_pixel_point = vec3_add(current_pixel_point, camera.pixel_delta_u);
         }
         current_pixel_point.x   = pixel00.x;
         current_pixel_point.y   += camera.pixel_delta.y;

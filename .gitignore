@@ -1,4 +1,6 @@
 *.out
 *.ppm
 *.bmp
-*
+.vscode/*
+build/*
+out/*

@@ -1,6 +1,7 @@
 #ifndef HITTABLE_OBJECT
 #define HITTABLE_OBJECT
-
+#include <string.h>
+#include <stdio.h>
 #include "vector.h"
 
 #define MAX_HITTABLES 20
@@ -44,7 +45,7 @@ typedef struct {
 
 typedef struct {
     Point   point;
-    Vector3 normal;
+    Vec3 normal;
     double  t;
     int     front_face;
 } Hit_Record;
@@ -80,9 +81,9 @@ void add_hittable(World *world, Hittable h) {
 
 void set_face_normal(Hit_Record *hit_record, Ray ray) {
     // This assumes hit_record->normal is already normalised
-    hit_record->front_face = (vector3_dot(ray.direction, hit_record->normal) < 0) ? 1 : 0;
+    hit_record->front_face = (vec3_dot(ray.direction, hit_record->normal) < 0) ? 1 : 0;
     if(!hit_record->front_face) {
-       hit_record->normal = vector3_invert(hit_record->normal);
+       hit_record->normal = vec3_invert(hit_record->normal);
     }
 }
 
@@ -94,10 +95,10 @@ int hit_sphere(Hittable hittable_sphere, Ray ray, Hit_Record *hit_record, double
     // where C := center, Q := origin of r
     Point center = hittable_sphere.pos;
     double radius = hittable_sphere.sphere.radius;
-    Vector3 oc = vector3_sub(center, ray.origin);
-    double a = vector3_mag_squared(ray.direction);
-    double h = vector3_dot(ray.direction, oc);
-    double c = vector3_mag_squared(oc) - radius*radius;
+    Vec3 oc = vec3_sub(center, ray.origin);
+    double a = vec3_mag_squared(ray.direction);
+    double h = vec3_dot(ray.direction, oc);
+    double c = vec3_mag_squared(oc) - radius*radius;
     double discriminant = h*h - a*c;
 
     // < 0 means no solutions, i.e no intersections
@@ -120,8 +121,8 @@ int hit_sphere(Hittable hittable_sphere, Ray ray, Hit_Record *hit_record, double
 
     // in the case of a sphere, we can get the surface normal by
     // substracting the sphere centre from the point of intersection
-    hit_record->normal = vector3_sub(ray_at(ray, hit_record->t), center);
-    hit_record->normal = vector3_div(hit_record->normal, radius);
+    hit_record->normal = vec3_sub(ray_at(ray, hit_record->t), center);
+    hit_record->normal = vec3_div(hit_record->normal, radius);
     
     set_face_normal(hit_record, ray);
 

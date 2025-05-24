@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     Camera camera = init_camera(
         (Point){0.0, 0.0, 0.0}, // position
         (16.0 / 9.0),           // aspect ratio
-        720,                    // image height
+        400,                    // image height
         1.0,                    // focal length
         2.0,                    // viewport height
         150,                    // samples per pixel
@@ -72,5 +72,5 @@ int main(int argc, char **argv) {
 
     render(camera, &world, pixels);
 
-    save_ppm("image.ppm", pixels, camera.image_width, camera.image_height);
+    save_ppm("out/image.ppm", pixels, camera.image_width, camera.image_height);
 }
