@@ -85,11 +85,17 @@ void vec3_print(Vec3 vec) {
 }
 
 Vec3 vec3_random() {
-    return (Vec3) {my_random_double(), my_random_double(), my_random_double()};
+    double x = my_random_double();
+    double y = my_random_double();
+    double z = my_random_double();
+    return (Vec3){x, y, z};
 }
 
 Vec3 vec3_random_between(double min, double max) {
-    return (Vec3) {my_random_double_between(min, max), my_random_double_between(min, max), my_random_double_between(min, max)};
+    double x = my_random_double_between(min, max);
+    double y = my_random_double_between(min, max);
+    double z = my_random_double_between(min, max);
+    return (Vec3){x, y, z};
 }
 
 Vec3 vec3_random_unit_vector() {
