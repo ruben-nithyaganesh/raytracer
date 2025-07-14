@@ -65,4 +65,6 @@ int main(int argc, char **argv) {
     render(camera, &world, pixels);
 
     save_ppm("out/image.ppm", pixels, camera.image_width, camera.image_height);
+    printf("raytraced image saved to out/image.ppm");
+
 }
